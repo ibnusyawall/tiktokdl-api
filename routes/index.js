@@ -50,4 +50,7 @@ router.get('/dbfetch', async (req, res, next) => {
     })
 })
 
+router.get('/cwd', async (req, res, next) => {
+    res.json({ status: 200, path: process.cwd() })
+})
 module.exports = router;
