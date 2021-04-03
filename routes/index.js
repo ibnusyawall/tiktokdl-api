@@ -7,6 +7,8 @@ var fs = require('fs')
 var needle = require('needle')
 var DB = require(process.cwd() + '/database/index')
 
+var _ = require('lodash')
+
 var options = {
     headers: {
         "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.80 Safari/537.36",
@@ -30,7 +32,9 @@ router.post('/tiktok', async (req, res, next) => {
         var data = fs.createWriteStream(process.cwd() + '/public/videos/' + path)
         var link = process.cwd() + '/public/videos/' + path
 
-        needle.get(resp.collector[0].videoUrl, options).pipe(data).on('finish', () => {
+        var dlink = _.isEmpty(resp.collector[0].videoUrlNoWaterMark) ? resp.collector[0].videoUrl : resp.collector[0].videoUrlNoWaterMark
+
+        needle.get(dlink, options).pipe(data).on('finish', () => {
             console.log('success')
             res.json({ status: 200, data: { link: 'http://' + link.replace(process.cwd(), req.headers.host).replace('/public', '')  } })
         }).on('error', d => console.log(d))
