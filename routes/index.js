@@ -42,6 +42,30 @@ router.post('/tiktok', async (req, res, next) => {
     }).catch(e => {})
 })
 
+router.get('/tiktok', async (req, res, next) => {
+    var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress
+    var OPTIONS = { date: moment().tz('Asia/Jakarta'), ip: ip }
+
+    await DB.insert(OPTIONS)
+
+    let url = req.query.url
+    if (!url) res.json({ status: 400, message: 'input a paramater url.' })
+
+    lib.Tiktok(url).then(resp => {
+        var path = `${moment().tz('Asia/Jakarta').format('YYYYMMDD_HHMMss')}.mp4`
+        var data = fs.createWriteStream(process.cwd() + '/public/videos/' + path)
+        var link = process.cwd() + '/public/videos/' + path
+
+        var dlink = _.isEmpty(resp.collector[0].videoUrlNoWaterMark) ? resp.collector[0].videoUrl : resp.collector[0].videoUrlNoWaterMark
+
+        needle.get(dlink, options).pipe(data).on('finish', () => {
+            console.log('success')
+            res.json({ status: 200, data: { link: 'http://' + link.replace(process.cwd(), req.headers.host).replace('/public', '')  } })
+        }).on('error', d => console.log(d))
+
+    }).catch(e => {})
+})
+
 router.get('/dbcount', async (req, res, next) => {
     DB.count({}, (e, data) => {
         res.json({ status: 200, count: data })
